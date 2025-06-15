@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>산불 위험도 계산기</title>
+   <style>
+       body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+       .input-group { margin: 15px 0; }
+       label { display: block; margin-bottom: 5px; font-weight: bold; }
+       input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+       button { background-color: #4CAF50; color: white; padding: 15px 32px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+       button:hover { background-color: #45a049; }
+       .result { margin-top: 20px; padding: 20px; border-radius: 4px; text-align: center; font-size: 18px; font-weight: bold; }
+       .safe { background-color: #d4edda; color: #155724; }
+       .normal { background-color: #fff3cd; color: #856404; }
+       .danger { background-color: #f8d7da; color: #721c24; }
+       .very-danger { background-color: #721c24; color: white; }
+   </style>
+</head>
+<body>
+   <h1>산불 위험도 계산기(스마트폰 날씨앱을 활용하세요)</h1>
+   
+   <div class="input-group">
+       <label>습도 (%):</label>
+       <input type="number" id="humidity" min="0" max="100" step="0.1">
+   </div>
+   
+   <div class="input-group">
+       <label>기온 (°C):</label>
+       <input type="number" id="temperature" step="0.1">
+   </div>
+   
+   <div class="input-group">
+       <label>현지기압 (hPa):</label>
+       <input type="number" id="pressure" step="0.1">
+   </div>
+   
+   <div class="input-group">
+       <label>이슬점온도 (°C):</label>
+       <input type="number" id="dewpoint" step="0.1">
+   </div>
+   
+   <div class="input-group">
+       <label>풍속 (m/s):</label>
+       <input type="number" id="windspeed" min="0" step="0.1">
+   </div>
+   
+   <div class="input-group">
+       <label>풍향:</label>
+       <select id="winddirection">
+           <option value="모름">모름</option>
+           <option value="북">북</option>
+           <option value="북동">북동</option>
+           <option value="동">동</option>
+           <option value="남동">남동</option>
+           <option value="남">남</option>
+           <option value="남서">남서</option>
+           <option value="서">서</option>
+           <option value="북서">북서</option>
+       </select>
+   </div>
+   
+   <button onclick="calculateRisk()">위험도 계산</button>
+   
+   <div id="result"></div>
+
+   <script>
+       function calculateRisk() {
+           const humidity = parseFloat(document.getElementById('humidity').value);
+           const temperature = parseFloat(document.getElementById('temperature').value);
+           const pressure = parseFloat(document.getElementById('pressure').value);
+           const dewpoint = parseFloat(document.getElementById('dewpoint').value);
+           const windspeed = parseFloat(document.getElementById('windspeed').value);
+           const winddirection = document.getElementById('winddirection').value;
+           
+           if (isNaN(humidity) || isNaN(temperature) || isNaN(pressure) || isNaN(dewpoint) || isNaN(windspeed)) {
+               alert('모든 값을 입력해주세요.');
+               return;
+           }
+           
+           // 10% 상향된 가중치로 위험도 계산
+           let riskScore = (100 - humidity) * 0.55 + 
+                          temperature * 0.11 + 
+                          (pressure - 997) * 0.165 + 
+                          (10 - dewpoint) * 0.11 + 
+                          windspeed * 0.165;
+           
+           // 풍향별 추가 점수
+           if (winddirection === '남서') {
+               riskScore += 5;
+           } else if (winddirection === '서' || winddirection === '남') {
+               riskScore += 3;
+           }
+           
+           riskScore = Math.round(riskScore * 10) / 10;
+           
+           let riskLevel, className;
+           if (riskScore >= 60) {
+               riskLevel = '매우위험';
+               className = 'very-danger';
+           } else if (riskScore >= 50) {
+               riskLevel = '위험';
+               className = 'danger';
+           } else if (riskScore >= 30) {
+               riskLevel = '보통';
+               className = 'normal';
+           } else {
+               riskLevel = '안전';
+               className = 'safe';
+           }
+           
+           document.getElementById('result').innerHTML = 
+               `<div class="result ${className}">위험도: ${riskScore}점<br>${riskLevel}</div>`;
+       }
+   </script>
+</body>
+</html>
